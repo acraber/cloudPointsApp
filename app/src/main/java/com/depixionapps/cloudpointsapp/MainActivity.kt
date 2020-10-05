@@ -25,6 +25,32 @@ class MainActivity : AppCompatActivity() {
 
         //Sign Up Page
 
+        val mFirebaseUser = FirebaseAuth.getInstance().currentUser
+
+        if (mFirebaseUser != null) {
+            llSignIn.visibility = View.GONE
+            llSignUp.visibility = View.GONE
+            llLoggedInScreen.visibility = View.VISIBLE
+            }else{
+            llSignIn.visibility = View.VISIBLE
+            llSignUp.visibility = View.GONE
+        }
+
+        losAmigosButton.setOnClickListener{
+            val intent = Intent(this, LosAmigosPointsActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnLogOut.setOnClickListener{
+            FirebaseAuth.getInstance().signOut()
+            if (FirebaseAuth.getInstance().currentUser == null){
+                llSignIn.visibility = View.VISIBLE
+                llSignUp.visibility = View.GONE
+            }else{
+                Toast.makeText(this, "Trouble Logging Out", Toast.LENGTH_LONG).show()
+            }
+        }
+
 
         btnSignUp.setOnClickListener {
             val email = etSuEmail.text.toString()
@@ -60,20 +86,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        //Sign In Page
-        mAuthStateListener = FirebaseAuth.AuthStateListener {
-            val mFirebaseUser = FirebaseAuth.getInstance().currentUser
-            if (mFirebaseUser != null) {
-                Toast.makeText(this@MainActivity, "Already Logged In. Going to home page...", Toast.LENGTH_SHORT).show()
-            val runnable = {
-                //Delays the activity switch for 3 seconds
-                    val i = Intent(this@MainActivity, LoggedInActivity::class.java)
-                    startActivity(i)
-            }
-            Handler(Looper.getMainLooper()) .postDelayed(runnable, 3000)
-        }
-        }
-
         btnSignIn.setOnClickListener{
             val email = etLiEmail.text.toString()
             val pwd = etLiPassword.text.toString()
@@ -93,7 +105,9 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this, "Login Unsuccessful. Ensure that the username and password is correct (passwords are case-sensitive)",
                                 Toast.LENGTH_SHORT).show()
                     } else {
-                        startActivity(Intent(this, LoggedInActivity::class.java))
+                        llSignIn.visibility = View.GONE
+                        llSignUp.visibility = View.GONE
+                        llLoggedInScreen.visibility = View.VISIBLE
                     }
                 }
             }
@@ -113,9 +127,4 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
-    override fun onStart() {
-        super.onStart()
-        mFirebaseAuth!!.addAuthStateListener(mAuthStateListener!!)
-    }
 }
