@@ -3,6 +3,8 @@ package com.depixionapps.cloudpointsapp
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         mFirebaseAuth = FirebaseAuth.getInstance()
 
         //Sign Up Page
+
 
         btnSignUp.setOnClickListener {
             val email = etSuEmail.text.toString()
@@ -58,16 +61,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         //Sign In Page
-        mAuthStateListener = object : FirebaseAuth.AuthStateListener {
-            var mFirebaseUser = mFirebaseAuth!!.currentUser
-            override fun onAuthStateChanged(firebaseAuth: FirebaseAuth) {
-                if (mFirebaseUser != null) {
-                    Toast.makeText(this@MainActivity, "You are logged in", Toast.LENGTH_SHORT)
-                            .show()
+        mAuthStateListener = FirebaseAuth.AuthStateListener {
+            val mFirebaseUser = FirebaseAuth.getInstance().currentUser
+            if (mFirebaseUser != null) {
+                Toast.makeText(this@MainActivity, "Already Logged In. Going to home page...", Toast.LENGTH_SHORT).show()
+            val runnable = {
+                //Delays the activity switch for 3 seconds
                     val i = Intent(this@MainActivity, LoggedInActivity::class.java)
                     startActivity(i)
-                }
             }
+            Handler(Looper.getMainLooper()) .postDelayed(runnable, 3000)
+        }
         }
 
         btnSignIn.setOnClickListener{
