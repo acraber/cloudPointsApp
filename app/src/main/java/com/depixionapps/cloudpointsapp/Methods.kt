@@ -7,8 +7,10 @@ import android.content.DialogInterface
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
+import kotlinx.android.synthetic.main.activity_los_amigos_points.*
+import java.lang.IllegalArgumentException
 import java.text.DateFormat
 import java.util.*
 
@@ -149,19 +151,21 @@ class Methods {
         if(FirebaseAuth.getInstance().currentUser?.uid != null){
             val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName)
             val email = FirebaseAuth.getInstance().currentUser?.email
-            val tupleName = FirebaseAuth.getInstance().currentUser!!.uid
+            val userId = FirebaseAuth.getInstance().currentUser!!.uid
+            val tupleName = userId
+            val dbReference = ref.child(userId)
 
-            val points = ref.child("points").ref
+            
 
-            Toast.makeText(context, "Points: $points", Toast.LENGTH_LONG).show()
 
             val currentDate = DateFormat.getDateInstance().format(Date())
             val currentTime = DateFormat.getTimeInstance().format(Date())
 
             val hero = EditFirebaseHero(email!!, pointsToAdd, currentDate, currentTime)
 
-            ref.child(tupleName).setValue(hero).addOnCompleteListener {
 
+            ref.child(tupleName).setValue(hero).addOnCompleteListener {
+                Toast.makeText(context, "Tuple saved successfully", Toast.LENGTH_SHORT).show()
             }
 
         }else{
@@ -169,6 +173,19 @@ class Methods {
         }
 
 
+    }
+
+    fun getDbPointsValue(ref: DatabaseReference): Int {
+        var pointsInDataBase = 0
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                pointsInDataBase = snapshot.child("points").value as Int
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Err 10 Database Error Exception", Toast.LENGTH_LONG).show()
+            }
+        })
+        return pointsInDataBase
     }
 
 
