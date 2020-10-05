@@ -155,7 +155,7 @@ class Methods {
             val tupleName = userId
             val dbReference = ref.child(userId)
 
-            
+
 
 
             val currentDate = DateFormat.getDateInstance().format(Date())
