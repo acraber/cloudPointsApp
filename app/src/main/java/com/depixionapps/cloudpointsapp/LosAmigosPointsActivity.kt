@@ -1,12 +1,14 @@
 package com.depixionapps.cloudpointsapp
 
 import android.app.Activity
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.FirebaseError
@@ -18,8 +20,8 @@ import com.google.firebase.database.ValueEventListener
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
 import java.util.*
+import javax.security.auth.callback.Callback
 import kotlin.collections.ArrayList
-
 class LosAmigosPointsActivity : AppCompatActivity() {
 
     var points = ""
@@ -28,6 +30,8 @@ class LosAmigosPointsActivity : AppCompatActivity() {
     private val usingNumberPicker = true
     private val numberOfPointsAllowed = 50
     private val methodsHandler = Methods()
+    private val TAG = "LosAmigosPointsActivity"
+
 
     private val pointsTableName = "PointsTable"
     private val qrCode = "AAA"
@@ -66,11 +70,13 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             methodsHandler.startNumberPicker()
         }
 
+
+
         redeemPointsBtn.setOnClickListener{
-            var thePoints ="0"
+            var thePoints ="-500"
             val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
                 FirebaseAuth.getInstance().currentUser!!.uid)
-            var points = ArrayList<String>()
+
 
             ref.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -78,14 +84,10 @@ class LosAmigosPointsActivity : AppCompatActivity() {
                     pointsNumberTextView.text = thePoints
                 }
                 override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
                 }
             })
-            Toast.makeText(this, points[0], Toast.LENGTH_SHORT).show()
-                var counter = 0
-
-
-
-            }
+        }
 
 
 

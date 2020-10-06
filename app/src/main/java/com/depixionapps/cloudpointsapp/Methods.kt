@@ -153,7 +153,9 @@ class Methods {
             val email = FirebaseAuth.getInstance().currentUser?.email
             val userId = FirebaseAuth.getInstance().currentUser!!.uid
             val tupleName = userId
-            val dbReference = ref.child(userId)
+            val dbRef = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+                FirebaseAuth.getInstance().currentUser!!.uid)
+
 
 
 
@@ -175,17 +177,24 @@ class Methods {
 
     }
 
-    fun getDbPointsValue(ref: DatabaseReference): Int {
-        var pointsInDataBase = 0
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                pointsInDataBase = snapshot.child("points").value as Int
-            }
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Err 10 Database Error Exception", Toast.LENGTH_LONG).show()
-            }
-        })
-        return pointsInDataBase
+    fun getDbPointsValue(): String {
+            val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+                FirebaseAuth.getInstance().currentUser!!.uid)
+            var points = ""
+
+            ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    points = snapshot.child("points").value.toString()
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+
+            })
+        return points
+    }
+
     }
 
 
@@ -193,4 +202,3 @@ class Methods {
 
 
 
-}
