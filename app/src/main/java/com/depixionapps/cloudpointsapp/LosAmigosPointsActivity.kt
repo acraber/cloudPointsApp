@@ -19,9 +19,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
-import java.util.*
-import javax.security.auth.callback.Callback
-import kotlin.collections.ArrayList
 class LosAmigosPointsActivity : AppCompatActivity() {
 
     var points = ""
@@ -87,6 +84,9 @@ class LosAmigosPointsActivity : AppCompatActivity() {
                     Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
                 }
             })
+            Handler(Looper.getMainLooper()).postDelayed({
+                Toast.makeText(context, "Points are $thePoints", Toast.LENGTH_SHORT).show()
+            }, 3000)
         }
 
 
