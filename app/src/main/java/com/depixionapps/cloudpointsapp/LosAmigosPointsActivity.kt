@@ -19,6 +19,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
+import java.util.*
+
 class LosAmigosPointsActivity : AppCompatActivity() {
 
     var points = ""
@@ -70,23 +72,7 @@ class LosAmigosPointsActivity : AppCompatActivity() {
 
 
         redeemPointsBtn.setOnClickListener{
-            var thePoints ="-500"
-            val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-                FirebaseAuth.getInstance().currentUser!!.uid)
-
-
-            ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    thePoints = snapshot.child("points").value.toString()
-                    pointsNumberTextView.text = thePoints
-                }
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
-                }
-            })
-            Handler(Looper.getMainLooper()).postDelayed({
-                Toast.makeText(context, "Points are $thePoints", Toast.LENGTH_SHORT).show()
-            }, 3000)
+           getPointsValue()
         }
 
 
@@ -116,6 +102,32 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             super.onActivityResult(requestCode, resultCode, data)
         }
     } //7
+
+
+    fun getPointsValue(){
+        var thePoints = "-500"
+        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+            FirebaseAuth.getInstance().currentUser!!.uid)
+
+
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                thePoints = snapshot.child("points").value.toString()
+                pointsNumberTextView.text = thePoints
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
+            }
+        })
+
+        val counter = 0
+        if(thePoints == "-500"){
+
+        }
+            Toast.makeText(this, "Points are $thePoints", Toast.LENGTH_SHORT).show()
+
+
+    }
 
 
 }
