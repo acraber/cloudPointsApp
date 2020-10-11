@@ -1,17 +1,11 @@
 package com.depixionapps.cloudpointsapp
 
 import android.app.Activity
-import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import com.google.firebase.FirebaseError
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -19,7 +13,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
-import java.util.*
+import java.util.concurrent.CountDownLatch
 
 class LosAmigosPointsActivity : AppCompatActivity() {
 
@@ -106,23 +100,29 @@ class LosAmigosPointsActivity : AppCompatActivity() {
 
     fun getPointsValue(){
         var thePoints = "-500"
-        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-            FirebaseAuth.getInstance().currentUser!!.uid)
 
+        val done = CountDownLatch(1)
+        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+            FirebaseAuth.getInstance().currentUser!!.uid
+        )
 
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 thePoints = snapshot.child("points").value.toString()
                 pointsNumberTextView.text = thePoints
+                done.countDown()
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
             }
         })
 
-        val counter = 0
-        if(thePoints == "-500"){
-
+        try {
+            done.await() //it will wait till the response is received from firebase.
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Err13 unable to get data.", Toast.LENGTH_SHORT).show()
         }
             Toast.makeText(this, "Points are $thePoints", Toast.LENGTH_SHORT).show()
 

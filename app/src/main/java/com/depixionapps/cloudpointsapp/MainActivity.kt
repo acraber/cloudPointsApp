@@ -37,6 +37,7 @@ import kotlinx.android.synthetic.main.activity_main.*
     - The logout button wasn't working - I added some wait time before it jumped classes to see if that would let it fully log out
     - I might need database connection tests every step of the way to make sure it's connected at all times. Same with username/password
     - I need to test this app with a bad internet connection
+    - Coroutines can be used to pause and set a time for a future upload of points if I wanna go that route
 */
 
 class MainActivity : AppCompatActivity() {

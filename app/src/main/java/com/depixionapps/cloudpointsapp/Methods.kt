@@ -165,7 +165,6 @@ class Methods {
 
             val hero = EditFirebaseHero(email!!, pointsToAdd, currentDate, currentTime)
 
-
             ref.child(tupleName).setValue(hero).addOnCompleteListener {
                 Toast.makeText(context, "Tuple saved successfully", Toast.LENGTH_SHORT).show()
             }
