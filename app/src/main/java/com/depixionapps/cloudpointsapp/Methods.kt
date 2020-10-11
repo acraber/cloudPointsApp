@@ -114,7 +114,7 @@ class Methods {
          */
 
         val builder = AlertDialog.Builder(context)
-        builder.setTitle("Adding ${pointsToAdd} points")
+        builder.setTitle("Adding $pointsToAdd points")
         builder.setPositiveButton("SCAN") { dialogInterface: DialogInterface, i: Int ->
             Toast.makeText(
                 context,
@@ -127,6 +127,7 @@ class Methods {
             Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
         }
 //was if (totalPointsAfterAdding >= numberOfPointsAllowed) {
+        //I have to change this later to not just have the if(false) statement
         if (false) {
             builder.setMessage(
                 "A Los Amigos employee must verify points before scanning.\n\nThe maximum total points allowed is $numberOfPointsAllowed\n\n" +
@@ -194,7 +195,36 @@ class Methods {
         return points
     }
 
+
+
+
+
+
+
+
+
+    //2nd class methods and interfaces
+    interface OnGetDataListener {
+        //this is the listener interface. I'm not really sure how it works but it does.
+        fun onSuccess(dataSnapshot: DataSnapshot?)
+        fun onStart()
+        fun onFailure()
     }
+
+    fun readData(ref: DatabaseReference, listener: OnGetDataListener) {
+        listener.onStart()
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                listener.onSuccess(snapshot)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
+                listener.onFailure()
+            }
+        })
+    }
+
+}
 
 
 
