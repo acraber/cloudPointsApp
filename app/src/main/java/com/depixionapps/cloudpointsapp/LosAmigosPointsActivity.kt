@@ -7,13 +7,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
-import java.util.concurrent.CountDownLatch
+
 
 class LosAmigosPointsActivity : AppCompatActivity() {
 
@@ -26,9 +23,12 @@ class LosAmigosPointsActivity : AppCompatActivity() {
     private val TAG = "LosAmigosPointsActivity"
 
 
+
     private val pointsTableName = "PointsTable"
     private val qrCode = "AAA"
     private val storeName = "LosAmigos"
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,18 +66,39 @@ class LosAmigosPointsActivity : AppCompatActivity() {
 
 
         redeemPointsBtn.setOnClickListener{
-           getPointsValue()
+            readData(FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(FirebaseAuth.getInstance().currentUser!!.uid),
+                object : OnGetDataListener {
+                override fun onSuccess(snapshot: DataSnapshot?) {
+                    val x = snapshot?.child("points")?.value.toString()
+                    Toast.makeText(context, "the data is $x", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onStart() {
+                }
+
+                override fun onFailure() {
+                }
+            })
         }
-
-
-
-
-
-
-
     }
+
+
+    fun readData(ref: DatabaseReference, listener: OnGetDataListener) {
+        listener.onStart()
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                listener.onSuccess(snapshot)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
+                listener.onFailure()
+            }
+        })
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        //This is for when we get the result from the barcode scanner.
         if (result != null) {
             if (result.contents != null) {
                 if(result.contents == qrCode) {
@@ -98,36 +119,13 @@ class LosAmigosPointsActivity : AppCompatActivity() {
     } //7
 
 
-    fun getPointsValue(){
-        var thePoints = "-500"
-
-        val done = CountDownLatch(1)
-        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-            FirebaseAuth.getInstance().currentUser!!.uid
-        )
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                thePoints = snapshot.child("points").value.toString()
-                pointsNumberTextView.text = thePoints
-                done.countDown()
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
-            }
-        })
-
-        try {
-            done.await() //it will wait till the response is received from firebase.
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-            Toast.makeText(this, "Err13 unable to get data.", Toast.LENGTH_SHORT).show()
-        }
-            Toast.makeText(this, "Points are $thePoints", Toast.LENGTH_SHORT).show()
-
-
+    interface OnGetDataListener {
+        //this is the listener interface. I'm not really sure how it works but it does.
+        fun onSuccess(dataSnapshot: DataSnapshot?)
+        fun onStart()
+        fun onFailure()
     }
+
 
 
 }
