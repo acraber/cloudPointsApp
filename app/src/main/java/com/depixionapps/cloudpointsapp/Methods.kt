@@ -6,9 +6,14 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkInfo
+import android.os.Build
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat.getSystemService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
@@ -16,115 +21,48 @@ import java.text.DateFormat
 import java.util.*
 
 class Methods {
+    //In order to use this class, it needs lots of info to be sent first using the setVariables function
     var doneWithShowingSpinner = false
     var pointsToAdd = 0
-    var totalPointsAfterAdding = 0
-    var tableName = ""
     var numberOfPointsAllowed = 0
     lateinit var context: Context
     lateinit var activity: Activity
     var usingNumberPicker: Boolean = false
     lateinit var storeName: String
 
-    fun setVariablesInMethods(storeName: String, numberOfPointsAllowed: Int, thisTable: String, thisContext: Context, thisActivity: Activity, usingNumberPicker: Boolean, ){
+    fun setVariables(storeName: String, numberOfPointsAllowed: Int, thisContext: Context, thisActivity: Activity, usingNumberPicker: Boolean, ){
         this.numberOfPointsAllowed = numberOfPointsAllowed
-        this.tableName = thisTable
         this.context = thisContext
         this.activity = thisActivity
         this.usingNumberPicker = usingNumberPicker
         this.storeName = storeName
     }
 
-    fun scanCode() {
-        val integrator = IntentIntegrator(activity)
-        integrator.captureActivity = CaptureAct::class.java
-        integrator.setOrientationLocked(false)
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
-        integrator.setPrompt("Scanning Code")
-        integrator.initiateScan()
-    } //5
-
-    fun startNumberPicker(textView: TextView){
-        //shows the number picker
-        pointsToAdd = 0
 
 
-        doneWithShowingSpinner = false
-        val d = Dialog(context)
-        d.setTitle("NumberPicker")
-        d.setContentView(R.layout.dialog)
-        val b1: Button = d.findViewById(R.id.setButton) as Button
-        val b2: Button = d.findViewById(R.id.cancelButton) as Button
-        val numberPicker = d.findViewById(R.id.numberPicker1) as NumberPicker
-        numberPicker.maxValue = 25
-        numberPicker.minValue = 1
-        numberPicker.wrapSelectorWheel = false
-
-        b1.setOnClickListener {
-            totalPointsAfterAdding = 0
-            pointsToAdd = numberPicker.value
-            d.dismiss()
-            doneWithShowingSpinner = true
-            setAlertDialogs(textView)
-        }//31 and also //6 earlier
-
-        b2.setOnClickListener {
-            d.dismiss()
-        }
-        d.show()
-    }
-
-    fun setAlertDialogs(textView: TextView){
-        /*all the alert dialog stuff I wrote kinda sucks. I know it's confusing but it works. Probably a good idea to re-write.
-        Sets the alert dialog to add points. Called on after choosing the number from the number picker.
-        It also calculates the number of points that I should be adding.
+    fun onAddPointsButton(textView: TextView){
+        /*Decides whether to activate the number picker or to just add one single point.
+            Implemented whenever people add points.
          */
-        //this part just makes sure I'm not adding too many points to the system.
-        var pointsAboveMax = false
-        val currentPoints = textView.text.toString().toInt()
-        val totalPointsAdding = currentPoints + pointsToAdd
-        if(totalPointsAdding > numberOfPointsAllowed){
-            pointsToAdd = numberOfPointsAllowed - currentPoints
-            Toast.makeText(context, "Attempted adding more points than allowed. Only adding $pointsToAdd", Toast.LENGTH_LONG).show()
-            pointsAboveMax = true
-        }
-
-        if (pointsToAdd >0){
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Adding $pointsToAdd points")
-            if(pointsAboveMax){
-                builder.setMessage("A $storeName employee will need to verify before adding points." +
-                        "\nAny points above a total of $numberOfPointsAllowed will be voided")
-            }else{
-                builder.setMessage("A $storeName employee will need to verify before adding points")
-            }
-            builder.setPositiveButton("OKAY") { dialogInterface: DialogInterface, i: Int ->
-                //nested builder function. shows a different builder when the OKAY button is pressed
-                val builder2 = AlertDialog.Builder(context)
-                builder2.setTitle("Adding $pointsToAdd points")
-                builder2.setMessage("Give phone to $storeName employee to verify")
-                builder2.setPositiveButton("SCAN") { dialogInterface: DialogInterface, i: Int ->
-                    Toast.makeText(
-                        context,
-                        "$pointsToAdd points are being added",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    scanCode()
-                }
-                builder2.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
-                    Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
-                }
-                builder2.show()
-            }
-            builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
-                Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
-            }
-        builder.show()
+        if(usingNumberPicker){
+            startNumberPicker(textView)
         }else{
-            Toast.makeText(context, "You already have the maximum number of points allowed. Redeem them before adding more", Toast.LENGTH_LONG).show()
+            pointsToAdd = 1
+            setAlertDialogs(textView)
         }
-
     }
+
+    fun showButtonIfUserHasFiftyPoints(
+        redeemPointsBtn: Button, textView: TextView
+    ) {
+        val numberOfPoints = textView.text.toString().toInt()
+        if (numberOfPoints >= numberOfPointsAllowed) {
+            redeemPointsBtn.visibility = View.VISIBLE
+        } else {
+            redeemPointsBtn.visibility = View.GONE
+        }
+    }
+
 
     fun changeFireBasePoints(textView: TextView, sharedPreferences: SharedPreferences, progressBar: ProgressBar, button: Button,
                              redeemingPoints: Boolean = false){
@@ -143,8 +81,8 @@ class Methods {
 
 
             if(textView.text.toString() != "null"){
-            val existingPoints = textView.text.toString().toInt()
-             points = pointsToAdd + existingPoints
+                val existingPoints = textView.text.toString().toInt()
+                points = pointsToAdd + existingPoints
             }
             else{
                 points = pointsToAdd
@@ -204,14 +142,14 @@ class Methods {
                     points = "0"
                 }
                 val editor = sharedPreferences.edit()
-                    editor.apply {
-                        putString("$storeName points", points)
-                        putString("$storeName progress", "0")
-                    }.apply()
+                editor.apply {
+                    putString("$storeName points", points)
+                    putString("$storeName progress", "0")
+                }.apply()
 
                 textView.text = points
-                progressBar.max = numberOfPointsAllowed*10
-                ObjectAnimator.ofInt(progressBar, "progress", points.toInt() * 10).setDuration(2000)
+                progressBar.max = numberOfPointsAllowed*100
+                ObjectAnimator.ofInt(progressBar, "progress", points.toInt() * 100).setDuration(2000)
                     .start()
                 showButtonIfUserHasFiftyPoints(button, textView)
             }
@@ -226,10 +164,10 @@ class Methods {
         //null checks are just to be safe. I noticed that it might be trying to grab shared preferences that don't exist
         //which could be bad
         if(sharedPreferences.getString("$storeName points", "0")!= null){
-        textView.text = sharedPreferences.getString("$storeName points", "0")
+            textView.text = sharedPreferences.getString("$storeName points", "0")
         }
         if(sharedPreferences.getString("$storeName progress", "0")!= null){
-        progressBar.progress = sharedPreferences.getString("$storeName progress", "0")!!.toInt()
+            progressBar.progress = sharedPreferences.getString("$storeName progress", "0")!!.toInt()
         }
     }
 
@@ -239,12 +177,13 @@ class Methods {
         builder.setMessage("This MUST be in front of a $storeName employee.\n\nHit GO BACK if you are not at $storeName ")
         builder.setPositiveButton("OKAY") { dialogInterface: DialogInterface, i: Int ->
             //nested builder function. shows a different builder when the OKAY button is pressed
+            if(isNetworkAvailable()){
             changeFireBasePoints(textView, sharedPreferences, progressBar, button, redeemingPoints = true)
             val builder2 = AlertDialog.Builder(context)
-            builder2.setTitle("POINTS REDEEMED")
+            builder2.setTitle("SHOW TO EMPLOYEE")
             builder2.setCancelable(false)
             builder2.setMessage("Give phone to $storeName employee to verify.\n" +
-                    "\nDo NOT hit finish")
+                    "\n*DO NOT HIT FINISH*")
             builder2.setPositiveButton("finish") { dialogInterface: DialogInterface, i: Int ->
                 Toast.makeText(
                     context,
@@ -253,6 +192,13 @@ class Methods {
                 ).show()
             }
             builder2.show()
+            }else{
+                val builder3 = AlertDialog.Builder(context)
+                builder3.setTitle("POTENTIAL FRAUD DETECTED")
+                builder3.setCancelable(false)
+                builder3.setMessage("The chances of losing internet connection right as someone tries to redeem points are very low.")
+                builder3.show()
+            }
         }
         builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
             Toast.makeText(activity, "Redemption cancelled", Toast.LENGTH_SHORT).show()
@@ -260,18 +206,111 @@ class Methods {
         builder.show()
     }
 
-    fun showButtonIfUserHasFiftyPoints(
-        redeemPointsBtn: Button, textView: TextView
-    ) {
-        val numberOfPoints = textView.text.toString().toInt()
-        if (numberOfPoints >= numberOfPointsAllowed) {
-            redeemPointsBtn.visibility = View.VISIBLE
+    fun isNetworkAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw      = connectivityManager.activeNetwork ?: return false
+            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+            return when {
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                //for other device how are able to connect with Ethernet
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                //for check internet over Bluetooth
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+                else -> false
+            }
         } else {
-            redeemPointsBtn.visibility = View.GONE
+            val nwInfo = connectivityManager.activeNetworkInfo ?: return false
+            return nwInfo.isConnected
         }
     }
 
-    fun auditFirebasePoints(pointsAdding: Int, textView: TextView){
+
+
+    private fun startNumberPicker(textView: TextView){
+        //shows the number picker
+        pointsToAdd = 0
+
+
+        doneWithShowingSpinner = false
+        val d = Dialog(context)
+        d.setTitle("NumberPicker")
+        d.setContentView(R.layout.dialog)
+        val b1: Button = d.findViewById(R.id.setButton) as Button
+        val b2: Button = d.findViewById(R.id.cancelButton) as Button
+        val numberPicker = d.findViewById(R.id.numberPicker1) as NumberPicker
+        numberPicker.maxValue = 25
+        numberPicker.minValue = 1
+        numberPicker.wrapSelectorWheel = false
+
+        b1.setOnClickListener {
+            pointsToAdd = numberPicker.value
+            d.dismiss()
+            doneWithShowingSpinner = true
+            setAlertDialogs(textView)
+        }//31 and also //6 earlier
+
+        b2.setOnClickListener {
+            d.dismiss()
+        }
+        d.show()
+    }
+
+    private fun setAlertDialogs(textView: TextView){
+        /*all the alert dialog stuff I wrote kinda sucks. I know it's confusing but it works. Probably a good idea to re-write.
+        Sets the alert dialog to add points. Called on after choosing the number from the number picker.
+        It also calculates the number of points that I should be adding.
+         */
+        //this part just makes sure I'm not adding too many points to the system.
+        var pointsAboveMax = false
+        val currentPoints = textView.text.toString().toInt()
+        val totalPointsAdding = currentPoints + pointsToAdd
+        if(totalPointsAdding > numberOfPointsAllowed){
+            pointsToAdd = numberOfPointsAllowed - currentPoints
+            Toast.makeText(context, "Attempted adding more points than allowed. Only adding $pointsToAdd", Toast.LENGTH_LONG).show()
+            pointsAboveMax = true
+        }
+
+        if (pointsToAdd >0){
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Adding $pointsToAdd points")
+            if(pointsAboveMax){
+                builder.setMessage("A $storeName employee will need to verify before adding points." +
+                        "\nAny points above a total of $numberOfPointsAllowed will be voided")
+            }else{
+                builder.setMessage("A $storeName employee will need to verify before adding points")
+            }
+            builder.setPositiveButton("OKAY") { dialogInterface: DialogInterface, i: Int ->
+                //nested builder function. shows a different builder when the OKAY button is pressed
+                val builder2 = AlertDialog.Builder(context)
+                builder2.setTitle("Adding $pointsToAdd points")
+                builder2.setMessage("Give phone to $storeName employee to verify")
+                builder2.setPositiveButton("SCAN") { dialogInterface: DialogInterface, i: Int ->
+                    Toast.makeText(
+                        context,
+                        "$pointsToAdd points are being added",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    scanCode()
+                }
+                builder2.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
+                    Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
+                }
+                builder2.show()
+            }
+            builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
+                Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
+            }
+        builder.show()
+        }else{
+            Toast.makeText(context, "You already have the maximum number of points allowed. Redeem them before adding more", Toast.LENGTH_LONG).show()
+        }
+
+    }
+
+
+    private fun auditFirebasePoints(pointsAdding: Int, textView: TextView){
 
         val userId = FirebaseAuth.getInstance().currentUser!!.uid
         val currentPoints = textView.text.toString().toInt()
@@ -290,6 +329,18 @@ class Methods {
             }
         }
     }
+
+    private fun scanCode() {
+        val integrator = IntentIntegrator(activity)
+        integrator.captureActivity = CaptureAct::class.java
+        integrator.setOrientationLocked(false)
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
+        integrator.setPrompt("Scanning Code")
+        integrator.initiateScan()
+    } //5
+
+
+
 }
 
 

@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--//Wendy 3 - copy and paste this into the new layout that goes with the activity you just made-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -13,14 +11,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="100dp"/>
-
-    <!--//Wendy 4 change "Spend $50 and get $5 free store credit"-->
     <TextView
         android:textStyle="bold"
         android:gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Spend $50 and get $5 free store credit!"
+        android:text="Buy 5 burgers get one free!"
         android:textSize="40dp"
         android:textColor="#FFFFFF"
         android:paddingBottom="150dp"/>

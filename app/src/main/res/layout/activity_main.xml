@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:visibility="visible"
         android:gravity="center">
 
         <EditText
@@ -159,16 +160,6 @@
             android:layout_width="match_parent"
             android:layout_height="100dp" />
 
-        <TextView
-            android:id="@+id/losAmigosButton"
-            android:padding="25dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:text="Los Amigos"
-            android:textSize="35dp"
-            android:textColor="@android:color/secondary_text_dark"/>
 
         <Button
             android:id="@+id/btnLogOut"
@@ -179,10 +170,25 @@
             android:background="@drawable/rounded_button"
             android:textSize="30sp"/>
 
+        <TextView
+            android:id="@+id/losAmigosButton"
+            android:padding="15dp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Los Amigos"
+            android:textSize="35dp"
+            android:textColor="@android:color/secondary_text_dark"/>
 
+
+
+        <!--//Wendy 5 copy this textView and paste it right below it.
+        Then change "bobsBurgersButton" and "Bob's Burgers" (the id and text)
+        -->
         <TextView
             android:id="@+id/bobsBurgersButton"
-            android:padding="25dp"
+            android:padding="15dp"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_width="300dp"
@@ -190,19 +196,8 @@
             android:text="Bob's Burgers"
             android:textSize="35dp"
             android:textColor="@android:color/secondary_text_dark"
-            android:visibility="gone"/>
+            android:visibility="visible"/>
 
-        <TextView
-            android:id="@+id/wetzelsPretzelsButton"
-            android:padding="25dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_width="400dp"
-            android:layout_height="wrap_content"
-            android:text="Wetzels Pretzels"
-            android:textSize="35dp"
-            android:textColor="@android:color/secondary_text_dark"
-            android:visibility="gone"/>
 
         <LinearLayout
             android:layout_width="match_parent"

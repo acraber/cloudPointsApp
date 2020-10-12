@@ -1,6 +1,10 @@
 package com.depixionapps.cloudpointsapp
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -23,7 +27,6 @@ import kotlinx.android.synthetic.main.activity_main.*
     - I need to set up more password verifications to make sure people know what's going on if firebase doesn't let them make an acount
 
     Notes
-    - ever time someone redeems points update
     - make sure they have wifi
     - I can possibly do something without so many childs and be able to convert it to
     SQL much easier like in my JS class
@@ -40,6 +43,7 @@ import kotlinx.android.synthetic.main.activity_main.*
     - Coroutines can be used to pause and set a time for a future upload of points if I wanna go that route
     - it might not be a good idea to get data from the database in unnecessary times
     - If someone changes their store name it would be a huge hassle
+    - I still need to make it useful for visually impaired people
 */
 
 class MainActivity : AppCompatActivity() {
@@ -64,84 +68,118 @@ class MainActivity : AppCompatActivity() {
             llLoggedInScreen.visibility = View.GONE
         }
 
+
+        /*
+        Wendy 6 copy and paste the below code.
+        then change losAmigosButton and LosAmigosPointsActivity
+
+        Once this is done it's a good time to test it and make sure it loads.
+        */
         losAmigosButton.setOnClickListener{
+            if(isNetworkAvailable()){
             val intent = Intent(this, LosAmigosPointsActivity::class.java)
             startActivity(intent)
+            }else{
+                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
+            }
         }
 
-        btnLogOut.setOnClickListener{
-            FirebaseAuth.getInstance().signOut()
-            if (FirebaseAuth.getInstance().currentUser == null){
-                llSignIn.visibility = View.VISIBLE
-                llSignUp.visibility = View.GONE
-                llLoggedInScreen.visibility = View.GONE
+
+        bobsBurgersButton.setOnClickListener{
+            if(isNetworkAvailable()){
+                val intent = Intent(this, BobsBurgersPointsActivity::class.java)
+                startActivity(intent)
             }else{
-                Toast.makeText(this, "Trouble Logging Out", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
+            }
+        }
+
+
+
+        btnLogOut.setOnClickListener{
+            if(isNetworkAvailable()){
+                FirebaseAuth.getInstance().signOut()
+                if (FirebaseAuth.getInstance().currentUser == null){
+                    llSignIn.visibility = View.VISIBLE
+                    llSignUp.visibility = View.GONE
+                    llLoggedInScreen.visibility = View.GONE
+                }else{
+                    Toast.makeText(this, "Trouble Logging Out", Toast.LENGTH_LONG).show()
+                }
+            }else{
+                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
             }
         }
 
 
         btnSignUp.setOnClickListener {
-            val email = etSuEmail.text.toString()
-            val pwd = etSuPassword.text.toString()
-            val verifyPwd = etSuVerifyPassword.text.toString()
-            if (email.isEmpty()) {
-                etSuEmail.error = "Please enter email"
-                etSuEmail.requestFocus()
-            } else if (pwd.isEmpty()) {
-                etSuPassword.error = "Please enter password"
-                etSuPassword.requestFocus()
-                //Possible error - didn't follow the video cause I don't like her programming style
-            }else if(!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
-                etSuEmail.error = "Email must be in correct format (ex email@gmail.com)"
-                etSuEmail.requestFocus()
-            } else if(pwd != verifyPwd){
-                etSuVerifyPassword.error = "Passwords must match"
-                etSuVerifyPassword.requestFocus()
-            }else {
-                mFirebaseAuth!!.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(
+            if(isNetworkAvailable()){
+                val email = etSuEmail.text.toString()
+                val pwd = etSuPassword.text.toString()
+                val verifyPwd = etSuVerifyPassword.text.toString()
+                if (email.isEmpty()) {
+                    etSuEmail.error = "Please enter email"
+                    etSuEmail.requestFocus()
+                } else if (pwd.isEmpty()) {
+                    etSuPassword.error = "Please enter password"
+                    etSuPassword.requestFocus()
+                    //Possible error - didn't follow the video cause I don't like her programming style
+                }else if(!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                    etSuEmail.error = "Email must be in correct format (ex email@gmail.com)"
+                    etSuEmail.requestFocus()
+                } else if(pwd != verifyPwd){
+                    etSuVerifyPassword.error = "Passwords must match"
+                    etSuVerifyPassword.requestFocus()
+                }else {
+                    mFirebaseAuth!!.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(
                         this
-                ) { task ->
-                    if (!task.isSuccessful) {
-                        Toast.makeText(
+                    ) { task ->
+                        if (!task.isSuccessful) {
+                            Toast.makeText(
                                 this,
                                 "Unsuccessful",
                                 Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        setUpLoggedInPage()
+                            ).show()
+                        } else {
+                            setUpLoggedInPage()
+                        }
                     }
                 }
+            }else{
+                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
             }
+
         }
 
         btnSignIn.setOnClickListener{
-            val email = etLiEmail.text.toString()
-            val pwd = etLiPassword.text.toString()
-            if (email.isEmpty()) {
-                etLiEmail.error = "Please enter email id"
-                etLiEmail.requestFocus()
-            } else if (pwd.isEmpty()) {
-                etLiPassword.error = "Please enter password"
-                etLiPassword.requestFocus()
-                //Possible error - didn't follow the video cause I don't like her programming style
-            }else if(!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
-                etLiEmail.error = "Email must be in correct format (username@email.com)"
-                etLiEmail.requestFocus()
-            } else {
-                mFirebaseAuth!!.signInWithEmailAndPassword(email, pwd).addOnCompleteListener(this) { task ->
-                    if (!task.isSuccessful) {
-                        Toast.makeText(this, "Login Unsuccessful. Ensure that the username and password is correct (passwords are case-sensitive)",
+            if(isNetworkAvailable()){
+                val email = etLiEmail.text.toString()
+                val pwd = etLiPassword.text.toString()
+                if (email.isEmpty()) {
+                    etLiEmail.error = "Please enter email id"
+                    etLiEmail.requestFocus()
+                } else if (pwd.isEmpty()) {
+                    etLiPassword.error = "Please enter password"
+                    etLiPassword.requestFocus()
+                    //Possible error - didn't follow the video cause I don't like her programming style
+                }else if(!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                    etLiEmail.error = "Email must be in correct format (username@email.com)"
+                    etLiEmail.requestFocus()
+                } else {
+                    mFirebaseAuth!!.signInWithEmailAndPassword(email, pwd).addOnCompleteListener(this) { task ->
+                        if (!task.isSuccessful) {
+                            Toast.makeText(this, "Login Unsuccessful. Ensure that the username and password is correct (passwords are case-sensitive)",
                                 Toast.LENGTH_SHORT).show()
-                    } else {
-                       setUpLoggedInPage()
+                        } else {
+                            setUpLoggedInPage()
+                        }
                     }
-
                 }
+            }else{
+                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
             }
+
         }
-
-
 
         tvLogin.setOnClickListener {
             llSignUp.visibility = View.GONE
@@ -162,15 +200,43 @@ class MainActivity : AppCompatActivity() {
         Checks to make sure there's a current user before setting up the page. If there is one, it sets all other visibilities to GONE
             and turns the logged in screen visibility to VISIBLE. If there isn't one, it displays an error message.
         */
-        if(FirebaseAuth.getInstance().currentUser != null){
-            llSignIn.visibility = View.GONE
-            llSignUp.visibility = View.GONE
-            llLoggedInScreen.visibility = View.VISIBLE
-            tvLiLoggedInAs.text = "Logged in as \n${FirebaseAuth.getInstance().currentUser?.email}"
+        if(isNetworkAvailable()){
+            if(FirebaseAuth.getInstance().currentUser != null){
+                llSignIn.visibility = View.GONE
+                llSignUp.visibility = View.GONE
+                llLoggedInScreen.visibility = View.VISIBLE
 
+                tvLiLoggedInAs.text = "Logged in as \n${FirebaseAuth.getInstance().currentUser?.email}"
+
+            }else{
+                Toast.makeText(this,"Err 14: trouble with transition. firebase instance is showing null when it should be logged in", Toast.LENGTH_SHORT).show()
+            }
         }else{
-            Toast.makeText(this,"Err 14: trouble with transition. firebase instance is showing null when it should be logged in", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
         }
     }
+
+
+    fun isNetworkAvailable(): Boolean {
+        val connectivityManager = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw      = connectivityManager.activeNetwork ?: return false
+            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+            return when {
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                //for other device how are able to connect with Ethernet
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                //for check internet over Bluetooth
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+                else -> false
+            }
+        } else {
+            val nwInfo = connectivityManager.activeNetworkInfo ?: return false
+            return nwInfo.isConnected
+        }
+    }
+
+
 
 }
