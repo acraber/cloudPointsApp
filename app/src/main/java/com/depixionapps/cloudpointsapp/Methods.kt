@@ -72,7 +72,7 @@ class Methods {
         }}*/
     }
 
-    fun startNumberPicker(){
+    fun startNumberPicker(textView: TextView){
         //shows the number picker
         pointsToAdd = 0
 
@@ -100,7 +100,7 @@ class Methods {
             } else {
                 actualPointsAdding = pointsToAdd
             }*/
-            setAlertDialogs()
+            setAlertDialogs(textView)
         }//31 and also //6 earlier
 
         b2.setOnClickListener {
@@ -109,7 +109,7 @@ class Methods {
         d.show()
     }
 
-    fun setAlertDialogs(){
+    fun setAlertDialogs(textView: TextView){
         /*all the alert dialog stuff I wrote kinda sucks. I know it's confusing but it works. Probably a good idea to re-write.
         Sets the alert dialog to add points. Called on after choosing the number from the number picker.
          */
@@ -127,8 +127,8 @@ class Methods {
         builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
             Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
         }
-//was if (totalPointsAfterAdding >= numberOfPointsAllowed) {
-        //I have to change this later to not just have the if(false) statement
+
+
         if (false) {
             builder.setMessage(
                 "A Los Amigos employee must verify points before scanning.\n\nThe maximum total points allowed is $numberOfPointsAllowed\n\n" +
@@ -149,14 +149,19 @@ class Methods {
         Is placed during the add points methods and in the redeem points builder.
            -this allows it to be called on whenever we add points locally and redeem points locally.
          */
-
+        var points = 0
         if(FirebaseAuth.getInstance().currentUser?.uid != null){
             val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName)
             val email = FirebaseAuth.getInstance().currentUser?.email
             val userId = FirebaseAuth.getInstance().currentUser!!.uid
             val tupleName = userId
+            if(textView.text.toString() != "null"){
             val existingPoints = textView.text.toString().toInt()
-            val points = pointsToAdd + existingPoints
+             points = pointsToAdd + existingPoints
+            }
+            else{
+                points = pointsToAdd
+            }
 
             val currentDate = DateFormat.getDateInstance().format(Date())
             val currentTime = DateFormat.getTimeInstance().format(Date())
@@ -195,19 +200,28 @@ class Methods {
 
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val points = snapshot.child("points").value.toString()
-                textView.text = points
+                var points = snapshot.child("points").value.toString()
+                //when starting with a new account, the points will be null coming from firebase
+                if (points == "null"){
+                    points = "0"
+                }
                 val editor = sharedPreferences.edit()
-                editor.apply{
-                    putString("$storeName points", points)
-                }.apply()
+                    editor.apply {
+                        putString("$storeName points", points)
+                    }.apply()
+                    textView.text = points
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
             }
         })
     }
 
+
+    fun loadSharedPreferencesData(textView: TextView, sharedPreferences: SharedPreferences){
+        textView.text = sharedPreferences.getString("$storeName points", "0")
+    }
 }
 
 

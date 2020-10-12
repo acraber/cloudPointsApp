@@ -42,11 +42,18 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             usingNumberPicker
         )
 
-        //makes the transition to changing points text a little simpler.
-        loadSharedPreferencesData(pointsNumberTextView)
-
-        //then it changes the points AND shared preferences to whatever's in the database
+        // changes the points AND shared preferences to whatever's in the database. I'm going to have to do this
+        // very often to make sure the pointsNumberTextView matches what's in the database. this is one of the FIRST
+        // things I have to do
+        //     it might be better to
         methodsHandler.changePointsAndText(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+
+
+        //makes the transition to changing points text a little smoother as long as the shared preferences matches what's in the database.
+        methodsHandler.loadSharedPreferencesData(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+
+
+
 
         scanBtn.setOnClickListener{
             methodsHandler.startNumberPicker()
@@ -78,10 +85,6 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         }
     } //7
 
-    private fun loadSharedPreferencesData(textView: TextView){
-        val sharedPreferences = getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE)
-        textView.text = sharedPreferences.getString("$storeName points", "0")
-    }
 
 
 }
