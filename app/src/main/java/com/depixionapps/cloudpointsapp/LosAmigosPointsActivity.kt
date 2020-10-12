@@ -4,10 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
 
@@ -33,27 +32,8 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_los_amigos_points)
 
-        /*
-        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-            FirebaseAuth.getInstance().currentUser!!.uid)
-
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                points = snapshot.child("points").value.toString()
-                pointsNumberTextView.text = points
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-        })*/
-
-        pointsNumberTextView.setText(loadSharedPreferencesData())
-
-        changePointsText()
-
         methodsHandler.setVariablesInMethods(
+            //This has to be done before any of the other methods are called from the MethodsHandler
             storeName,
             numberOfPointsAllowed,
             pointsTableName,
@@ -62,6 +42,12 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             usingNumberPicker
         )
 
+        //makes the transition to changing points text a little simpler.
+        loadSharedPreferencesData(pointsNumberTextView)
+
+        //then it changes the points AND shared preferences to whatever's in the database
+        methodsHandler.changePointsAndText(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+
         scanBtn.setOnClickListener{
             methodsHandler.startNumberPicker()
         }
@@ -69,10 +55,9 @@ class LosAmigosPointsActivity : AppCompatActivity() {
 
 
         redeemPointsBtn.setOnClickListener{
-            changePointsText()
+            methodsHandler.changePointsAndText(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
         }
     }
-
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -81,11 +66,7 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         if (result != null) {
             if (result.contents != null) {
                 if(result.contents == qrCode) {
-                    methodsHandler.changeFireBasePoints()
-                    methodsHandler.qrScanSuccess(
-                        redeemPointsBtn,
-                        pointsNumberTextView, progressBar
-                    )
+                    methodsHandler.changeFireBasePoints(pointsNumberTextView,  getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
                 }else {
                     Toast.makeText(this, "Barcode Not Recognized", Toast.LENGTH_LONG).show()
                 }
@@ -97,44 +78,10 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         }
     } //7
 
-    fun changePointsText() {
-        // If I'm going to do this workaround and not return a value with this function, I have to make DAMN
-        // sure I'm changing the points value on startup every time. And then every time points are changed I need to
-        // make sure I'm changing the text every single time.
-        //Some questions are what if someone logs into a different phone with their account. If their points don't update right
-        // and I didn't update their points, the user might lose their points when they update.
-        // I might need to make an audit function to make sure the points in the database match what's shown on the textView.
-        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-            FirebaseAuth.getInstance().currentUser!!.uid
-        )
-
+    private fun loadSharedPreferencesData(textView: TextView){
         val sharedPreferences = getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val points = snapshot.child("points").value.toString()
-                pointsNumberTextView.text = points
-                editor.apply{
-                    putString("$storeName points", points)
-                }.apply()
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
-            }
-        })
+        textView.text = sharedPreferences.getString("$storeName points", "0")
     }
-
-    private fun loadSharedPreferencesData(): String?{
-        val sharedPreferences = getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("$storeName points", "0")
-    }
-
-
-
-
-
 
 
 }

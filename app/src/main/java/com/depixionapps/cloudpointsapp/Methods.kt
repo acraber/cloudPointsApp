@@ -143,7 +143,7 @@ class Methods {
         }
     }
 
-    fun changeFireBasePoints(){
+    fun changeFireBasePoints(textView: TextView, sharedPreferences: SharedPreferences){
         /* Used to change the number of points in the firebase database for record keeping.
         Does not provide update data for each update. Only provides most recent update.
         Is placed during the add points methods and in the redeem points builder.
@@ -155,21 +155,18 @@ class Methods {
             val email = FirebaseAuth.getInstance().currentUser?.email
             val userId = FirebaseAuth.getInstance().currentUser!!.uid
             val tupleName = userId
-            val dbRef = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-                FirebaseAuth.getInstance().currentUser!!.uid)
-
-
-
-
+            val existingPoints = textView.text.toString().toInt()
+            val points = pointsToAdd + existingPoints
 
             val currentDate = DateFormat.getDateInstance().format(Date())
             val currentTime = DateFormat.getTimeInstance().format(Date())
 
-            val hero = EditFirebaseHero(email!!, pointsToAdd, currentDate, currentTime)
+            val hero = EditFirebaseHero(email!!, points, currentDate, currentTime)
 
             ref.child(tupleName).setValue(hero).addOnCompleteListener {
                 Toast.makeText(context, "Tuple saved successfully", Toast.LENGTH_SHORT).show()
             }
+            changePointsAndText(textView, sharedPreferences)
 
         }else{
             Toast.makeText(context, "User ID isn't even available. User isn't even signed in. Should never have made it this far.", Toast.LENGTH_LONG).show()
@@ -178,30 +175,33 @@ class Methods {
 
     }
 
-    fun changePointsText(sharedPreferences: SharedPreferences) {
+    fun changePointsAndText(textView: TextView, sharedPreferences: SharedPreferences) {
+        /*
+        changes the number of points in the local shared preferences and the pointsNumberTextView to match whatever
+        is in the database.
+        This will be placed every time the system loads as well as every time the database is updated.
+        The pointsNumberTextView is where I'm going to be getting all my data so I need to be really careful with this.
+        */
         // If I'm going to do this workaround and not return a value with this function, I have to make DAMN
         // sure I'm changing the points value on startup every time. And then every time points are changed I need to
         // make sure I'm changing the text every single time.
         //Some questions are what if someone logs into a different phone with their account. If their points don't update right
         // and I didn't update their points, the user might lose their points when they update.
         // I might need to make an audit function to make sure the points in the database match what's shown on the textView.
-
+        //      maybe something that makes sure shared preferences and the pointsNumberTextView are matching
         val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
             FirebaseAuth.getInstance().currentUser!!.uid
         )
 
-
-        val editor = sharedPreferences.edit()
-
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val points = snapshot.child("points").value.toString()
-                pointsNumberTextView.text = points
+                textView.text = points
+                val editor = sharedPreferences.edit()
                 editor.apply{
                     putString("$storeName points", points)
                 }.apply()
             }
-
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
             }
