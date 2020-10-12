@@ -39,6 +39,7 @@ import kotlinx.android.synthetic.main.activity_main.*
     - I need to test this app with a bad internet connection
     - Coroutines can be used to pause and set a time for a future upload of points if I wanna go that route
     - it might not be a good idea to get data from the database in unnecessary times
+    - If someone changes their store name it would be a huge hassle
 */
 
 class MainActivity : AppCompatActivity() {
@@ -165,7 +166,7 @@ class MainActivity : AppCompatActivity() {
             llSignIn.visibility = View.GONE
             llSignUp.visibility = View.GONE
             llLoggedInScreen.visibility = View.VISIBLE
-            tvLiLoggedInAs.text = "Logged in as ${FirebaseAuth.getInstance().currentUser?.email}"
+            tvLiLoggedInAs.text = "Logged in as \n${FirebaseAuth.getInstance().currentUser?.email}"
 
         }else{
             Toast.makeText(this,"Err 14: trouble with transition. firebase instance is showing null when it should be logged in", Toast.LENGTH_SHORT).show()

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.integration.android.IntentIntegrator
@@ -21,10 +20,9 @@ class LosAmigosPointsActivity : AppCompatActivity() {
     private val TAG = "LosAmigosPointsActivity"
 
 
-
     private val pointsTableName = "PointsTable"
     private val qrCode = "AAA"
-    private val storeName = "LosAmigos"
+    private val storeName = "Los Amigos"
 
 
 
@@ -46,26 +44,25 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         // very often to make sure the pointsNumberTextView matches what's in the database. this is one of the FIRST
         // things I have to do
         //     it might be better to
-        methodsHandler.changePointsAndText(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+        methodsHandler.matchTextViewAndButtonsToDb(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE), progressBar, redeemPointsBtn)
 
 
         //makes the transition to changing points text a little smoother as long as the shared preferences matches what's in the database.
-        methodsHandler.loadSharedPreferencesData(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+        methodsHandler.loadSharedPreferencesData(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE), progressBar)
 
-
+        methodsHandler.showButtonIfUserHasFiftyPoints(redeemPointsBtn, pointsNumberTextView)
 
 
         scanBtn.setOnClickListener{
-            methodsHandler.startNumberPicker()
+            methodsHandler.startNumberPicker(pointsNumberTextView)
         }
 
 
 
         redeemPointsBtn.setOnClickListener{
-            methodsHandler.changePointsAndText(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+            methodsHandler.redeemPoints(pointsNumberTextView, getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE), progressBar, redeemPointsBtn)
         }
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
@@ -73,7 +70,8 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         if (result != null) {
             if (result.contents != null) {
                 if(result.contents == qrCode) {
-                    methodsHandler.changeFireBasePoints(pointsNumberTextView,  getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE))
+                    methodsHandler.changeFireBasePoints(pointsNumberTextView,  getSharedPreferences("sharedPrefs",
+                        Context.MODE_PRIVATE), progressBar, redeemPointsBtn)
                 }else {
                     Toast.makeText(this, "Barcode Not Recognized", Toast.LENGTH_LONG).show()
                 }
@@ -84,6 +82,7 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             super.onActivityResult(requestCode, resultCode, data)
         }
     } //7
+
 
 
 

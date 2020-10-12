@@ -1,23 +1,22 @@
 package com.depixionapps.cloudpointsapp
 
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
-import kotlinx.android.synthetic.main.activity_los_amigos_points.*
-import java.lang.IllegalArgumentException
 import java.text.DateFormat
 import java.util.*
 
 class Methods {
     var doneWithShowingSpinner = false
-    var actualPointsAdding = 0
     var pointsToAdd = 0
     var totalPointsAfterAdding = 0
     var tableName = ""
@@ -25,11 +24,9 @@ class Methods {
     lateinit var context: Context
     lateinit var activity: Activity
     var usingNumberPicker: Boolean = false
-    var phoneID = "Phone02"
-    var storeName = ""
+    lateinit var storeName: String
 
-
-    fun setVariablesInMethods(storeName: String, numberOfPointsAllowed: Int, thisTable: String, thisContext: Context, thisActivity: Activity, usingNumberPicker: Boolean){
+    fun setVariablesInMethods(storeName: String, numberOfPointsAllowed: Int, thisTable: String, thisContext: Context, thisActivity: Activity, usingNumberPicker: Boolean, ){
         this.numberOfPointsAllowed = numberOfPointsAllowed
         this.tableName = thisTable
         this.context = thisContext
@@ -46,31 +43,6 @@ class Methods {
         integrator.setPrompt("Scanning Code")
         integrator.initiateScan()
     } //5
-
-    fun qrScanSuccess(redeemPointsBtn: Button, pointsNumberTextView: TextView, progressBar: ProgressBar){
-        /*Sets the progress bar and points number to match what's in the database.
-        Is placed in the onActivityResult() and is used every time something's scanned */
-
-        /*
-        addPointsToDb(pointsToAdd)//24
-        showButtonIfUserHasFiftyPoints(redeemPointsBtn)
-
-        setProgressBarAndPointsNumber(
-            getPointsValueFromDb(),
-            progressBar, pointsNumberTextView
-        )
-        Toast.makeText(context, "$actualPointsAdding Points added", Toast.LENGTH_LONG).show()
-        //auditFirebasePoints(actualPointsAdding)
-        actualPointsAdding = 0
-        pointsToAdd = 0
-
-
-        if(isThereMoreThanOneSetOfPoints()){
-            val databaseHandler = DatabaseHandler(context)
-            databaseHandler.deleteFirstRow(tableName)
-            databaseHandler.close()
-        }}*/
-    }
 
     fun startNumberPicker(textView: TextView){
         //shows the number picker
@@ -93,13 +65,6 @@ class Methods {
             pointsToAdd = numberPicker.value
             d.dismiss()
             doneWithShowingSpinner = true
-            /*totalPointsAfterAdding = pointsToAdd + getPointsValueFromDb()
-            if (totalPointsAfterAdding >= numberOfPointsAllowed) {
-                actualPointsAdding = numberOfPointsAllowed - getPointsValueFromDb()
-                pointsToAdd = actualPointsAdding
-            } else {
-                actualPointsAdding = pointsToAdd
-            }*/
             setAlertDialogs(textView)
         }//31 and also //6 earlier
 
@@ -112,38 +77,57 @@ class Methods {
     fun setAlertDialogs(textView: TextView){
         /*all the alert dialog stuff I wrote kinda sucks. I know it's confusing but it works. Probably a good idea to re-write.
         Sets the alert dialog to add points. Called on after choosing the number from the number picker.
+        It also calculates the number of points that I should be adding.
          */
-
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle("Adding $pointsToAdd points")
-        builder.setPositiveButton("SCAN") { dialogInterface: DialogInterface, i: Int ->
-            Toast.makeText(
-                context,
-                "$pointsToAdd points are being added",
-                Toast.LENGTH_LONG
-            ).show()
-            scanCode()
-        }
-        builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
-            Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
+        //this part just makes sure I'm not adding too many points to the system.
+        var pointsAboveMax = false
+        val currentPoints = textView.text.toString().toInt()
+        val totalPointsAdding = currentPoints + pointsToAdd
+        if(totalPointsAdding > numberOfPointsAllowed){
+            pointsToAdd = numberOfPointsAllowed - currentPoints
+            Toast.makeText(context, "Attempted adding more points than allowed. Only adding $pointsToAdd", Toast.LENGTH_LONG).show()
+            pointsAboveMax = true
         }
 
-
-        if (false) {
-            builder.setMessage(
-                "A Los Amigos employee must verify points before scanning.\n\nThe maximum total points allowed is $numberOfPointsAllowed\n\n" +
-                        "Any points above a total of $numberOfPointsAllowed will not be added"
-            )
-            totalPointsAfterAdding = 0
-            builder.show()
-        } else {
-            builder.setMessage("A Los Amigos employee must verify points before scanning.")
-            totalPointsAfterAdding = 0
-            builder.show()
+        if (pointsToAdd >0){
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Adding $pointsToAdd points")
+            if(pointsAboveMax){
+                builder.setMessage("A $storeName employee will need to verify before adding points." +
+                        "\nAny points above a total of $numberOfPointsAllowed will be voided")
+            }else{
+                builder.setMessage("A $storeName employee will need to verify before adding points")
+            }
+            builder.setPositiveButton("OKAY") { dialogInterface: DialogInterface, i: Int ->
+                //nested builder function. shows a different builder when the OKAY button is pressed
+                val builder2 = AlertDialog.Builder(context)
+                builder2.setTitle("Adding $pointsToAdd points")
+                builder2.setMessage("Give phone to $storeName employee to verify")
+                builder2.setPositiveButton("SCAN") { dialogInterface: DialogInterface, i: Int ->
+                    Toast.makeText(
+                        context,
+                        "$pointsToAdd points are being added",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    scanCode()
+                }
+                builder2.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
+                    Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
+                }
+                builder2.show()
+            }
+            builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
+                Toast.makeText(activity, "Scan cancelled", Toast.LENGTH_SHORT).show()
+            }
+        builder.show()
+        }else{
+            Toast.makeText(context, "You already have the maximum number of points allowed. Redeem them before adding more", Toast.LENGTH_LONG).show()
         }
+
     }
 
-    fun changeFireBasePoints(textView: TextView, sharedPreferences: SharedPreferences){
+    fun changeFireBasePoints(textView: TextView, sharedPreferences: SharedPreferences, progressBar: ProgressBar, button: Button,
+                             redeemingPoints: Boolean = false){
         /* Used to change the number of points in the firebase database for record keeping.
         Does not provide update data for each update. Only provides most recent update.
         Is placed during the add points methods and in the redeem points builder.
@@ -155,6 +139,9 @@ class Methods {
             val email = FirebaseAuth.getInstance().currentUser?.email
             val userId = FirebaseAuth.getInstance().currentUser!!.uid
             val tupleName = userId
+
+
+
             if(textView.text.toString() != "null"){
             val existingPoints = textView.text.toString().toInt()
              points = pointsToAdd + existingPoints
@@ -163,15 +150,26 @@ class Methods {
                 points = pointsToAdd
             }
 
-            val currentDate = DateFormat.getDateInstance().format(Date())
-            val currentTime = DateFormat.getTimeInstance().format(Date())
+            //if the user is redeeming points, it changes the points value to 0 and audits by subtracting the total number of points allowed.
+            //if not then it carries on with the other points value, and audits with the number of points being added.
+            if(redeemingPoints){
+                points = 0
+                auditFirebasePoints(-numberOfPointsAllowed, textView)
+            }else{
+                auditFirebasePoints(pointsToAdd, textView)
+            }
 
-            val hero = EditFirebaseHero(email!!, points, currentDate, currentTime)
+
+
+            val currentDate = DateFormat.getDateInstance().format(Date()) + ". " + DateFormat.getTimeInstance().format(Date())
+
+            val hero = EditFirebaseHero(email!!, points, currentDate)
 
             ref.child(tupleName).setValue(hero).addOnCompleteListener {
                 Toast.makeText(context, "Tuple saved successfully", Toast.LENGTH_SHORT).show()
             }
-            changePointsAndText(textView, sharedPreferences)
+
+            matchTextViewAndButtonsToDb(textView, sharedPreferences, progressBar, button)
 
         }else{
             Toast.makeText(context, "User ID isn't even available. User isn't even signed in. Should never have made it this far.", Toast.LENGTH_LONG).show()
@@ -180,7 +178,7 @@ class Methods {
 
     }
 
-    fun changePointsAndText(textView: TextView, sharedPreferences: SharedPreferences) {
+    fun matchTextViewAndButtonsToDb(textView: TextView, sharedPreferences: SharedPreferences, progressBar: ProgressBar, button: Button) {
         /*
         changes the number of points in the local shared preferences and the pointsNumberTextView to match whatever
         is in the database.
@@ -194,13 +192,13 @@ class Methods {
         // and I didn't update their points, the user might lose their points when they update.
         // I might need to make an audit function to make sure the points in the database match what's shown on the textView.
         //      maybe something that makes sure shared preferences and the pointsNumberTextView are matching
-        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-            FirebaseAuth.getInstance().currentUser!!.uid
-        )
+        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName)
+            .child(FirebaseAuth.getInstance().currentUser!!.uid).child("points")
 
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                var points = snapshot.child("points").value.toString()
+                //grabbing ONLY the points value for better data usage
+                var points = snapshot.value.toString()
                 //when starting with a new account, the points will be null coming from firebase
                 if (points == "null"){
                     points = "0"
@@ -208,8 +206,14 @@ class Methods {
                 val editor = sharedPreferences.edit()
                     editor.apply {
                         putString("$storeName points", points)
+                        putString("$storeName progress", "0")
                     }.apply()
-                    textView.text = points
+
+                textView.text = points
+                progressBar.max = numberOfPointsAllowed*10
+                ObjectAnimator.ofInt(progressBar, "progress", points.toInt() * 10).setDuration(2000)
+                    .start()
+                showButtonIfUserHasFiftyPoints(button, textView)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -218,9 +222,73 @@ class Methods {
         })
     }
 
-
-    fun loadSharedPreferencesData(textView: TextView, sharedPreferences: SharedPreferences){
+    fun loadSharedPreferencesData(textView: TextView, sharedPreferences: SharedPreferences, progressBar: ProgressBar){
+        //null checks are just to be safe. I noticed that it might be trying to grab shared preferences that don't exist
+        //which could be bad
+        if(sharedPreferences.getString("$storeName points", "0")!= null){
         textView.text = sharedPreferences.getString("$storeName points", "0")
+        }
+        if(sharedPreferences.getString("$storeName progress", "0")!= null){
+        progressBar.progress = sharedPreferences.getString("$storeName progress", "0")!!.toInt()
+        }
+    }
+
+    fun redeemPoints(textView: TextView, sharedPreferences: SharedPreferences, progressBar: ProgressBar, button: Button){
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("Are you sure you want to redeem your points?")
+        builder.setMessage("This MUST be in front of a $storeName employee.\n\nHit GO BACK if you are not at $storeName ")
+        builder.setPositiveButton("OKAY") { dialogInterface: DialogInterface, i: Int ->
+            //nested builder function. shows a different builder when the OKAY button is pressed
+            changeFireBasePoints(textView, sharedPreferences, progressBar, button, redeemingPoints = true)
+            val builder2 = AlertDialog.Builder(context)
+            builder2.setTitle("POINTS REDEEMED")
+            builder2.setCancelable(false)
+            builder2.setMessage("Give phone to $storeName employee to verify.\n" +
+                    "\nDo NOT hit finish")
+            builder2.setPositiveButton("finish") { dialogInterface: DialogInterface, i: Int ->
+                Toast.makeText(
+                    context,
+                    "Points have been redeemed",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            builder2.show()
+        }
+        builder.setNegativeButton("GO BACK") { dialogInterface: DialogInterface, i: Int ->
+            Toast.makeText(activity, "Redemption cancelled", Toast.LENGTH_SHORT).show()
+        }
+        builder.show()
+    }
+
+    fun showButtonIfUserHasFiftyPoints(
+        redeemPointsBtn: Button, textView: TextView
+    ) {
+        val numberOfPoints = textView.text.toString().toInt()
+        if (numberOfPoints >= numberOfPointsAllowed) {
+            redeemPointsBtn.visibility = View.VISIBLE
+        } else {
+            redeemPointsBtn.visibility = View.GONE
+        }
+    }
+
+    fun auditFirebasePoints(pointsAdding: Int, textView: TextView){
+
+        val userId = FirebaseAuth.getInstance().currentUser!!.uid
+        val currentPoints = textView.text.toString().toInt()
+        val ref = FirebaseDatabase.getInstance().getReference("Audit").child(storeName).child(userId)
+        var points = pointsAdding
+        val tupleName = ref.push().key
+        val currentDate = DateFormat.getDateInstance().format(Date()) + ". " + DateFormat.getTimeInstance().format(Date())
+
+
+        val predictedPoints = currentPoints + pointsAdding
+        val hero = AuditFirebaseHero(currentDate, points, predictedPoints, currentPoints)
+
+        if (tupleName != null) {
+            ref.child(tupleName).setValue(hero).addOnCompleteListener {
+                Toast.makeText(context, "Tuple saved successfully", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
 
