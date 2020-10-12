@@ -28,7 +28,7 @@ import kotlinx.android.synthetic.main.activity_main.*
     - I can possibly do something without so many childs and be able to convert it to
     SQL much easier like in my JS class
     - Maybe delete accounts that haven't been active in a month or so?
-    - Maybe I want to figure out how to have login and sign up on the same activity so I'm not always jumping everywhere
+    ✓ Maybe I want to figure out how to have login and sign up on the same activity so I'm not always jumping everywhere
     - Email auth only takes an actual email so I have to put in stuff for that
     - I might want to not switch activities every time
     - It might be a MASSIVE headache if I have someone logged in without the ability to reach firebase, either the database or login info.
@@ -38,6 +38,7 @@ import kotlinx.android.synthetic.main.activity_main.*
     - I might need database connection tests every step of the way to make sure it's connected at all times. Same with username/password
     - I need to test this app with a bad internet connection
     - Coroutines can be used to pause and set a time for a future upload of points if I wanna go that route
+    - it might not be a good idea to get data from the database in unnecessary times
 */
 
 class MainActivity : AppCompatActivity() {
@@ -167,7 +168,7 @@ class MainActivity : AppCompatActivity() {
             tvLiLoggedInAs.text = "Logged in as ${FirebaseAuth.getInstance().currentUser?.email}"
 
         }else{
-            Toast.makeText(this,"trouble with transition. firebase instance is showing null when it should be logged in", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this,"Err 14: trouble with transition. firebase instance is showing null when it should be logged in", Toast.LENGTH_SHORT).show()
         }
     }
 

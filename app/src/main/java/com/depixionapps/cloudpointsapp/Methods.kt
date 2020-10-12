@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.auth.FirebaseAuth
@@ -177,49 +178,32 @@ class Methods {
 
     }
 
-    fun getDbPointsValue(): String {
-            val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
-                FirebaseAuth.getInstance().currentUser!!.uid)
-            var points = ""
+    fun changePointsText(sharedPreferences: SharedPreferences) {
+        // If I'm going to do this workaround and not return a value with this function, I have to make DAMN
+        // sure I'm changing the points value on startup every time. And then every time points are changed I need to
+        // make sure I'm changing the text every single time.
+        //Some questions are what if someone logs into a different phone with their account. If their points don't update right
+        // and I didn't update their points, the user might lose their points when they update.
+        // I might need to make an audit function to make sure the points in the database match what's shown on the textView.
 
-            ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    points = snapshot.child("points").value.toString()
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-
-                }
-
-            })
-        return points
-    }
+        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+            FirebaseAuth.getInstance().currentUser!!.uid
+        )
 
 
+        val editor = sharedPreferences.edit()
 
-
-
-
-
-
-
-    //2nd class methods and interfaces
-    interface OnGetDataListener {
-        //this is the listener interface. I'm not really sure how it works but it does.
-        fun onSuccess(dataSnapshot: DataSnapshot?)
-        fun onStart()
-        fun onFailure()
-    }
-
-    fun readData(ref: DatabaseReference, listener: OnGetDataListener) {
-        listener.onStart()
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                listener.onSuccess(snapshot)
+                val points = snapshot.child("points").value.toString()
+                pointsNumberTextView.text = points
+                editor.apply{
+                    putString("$storeName points", points)
+                }.apply()
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
-                listener.onFailure()
             }
         })
     }

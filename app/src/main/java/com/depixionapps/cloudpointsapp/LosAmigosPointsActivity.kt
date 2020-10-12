@@ -14,7 +14,6 @@ import kotlinx.android.synthetic.main.activity_los_amigos_points.*
 
 class LosAmigosPointsActivity : AppCompatActivity() {
 
-    var points = ""
     private val context: Context = this
     private val thisActivity: Activity = this
     private val usingNumberPicker = true
@@ -50,6 +49,10 @@ class LosAmigosPointsActivity : AppCompatActivity() {
             }
         })*/
 
+        pointsNumberTextView.setText(loadSharedPreferencesData())
+
+        changePointsText()
+
         methodsHandler.setVariablesInMethods(
             storeName,
             numberOfPointsAllowed,
@@ -66,35 +69,11 @@ class LosAmigosPointsActivity : AppCompatActivity() {
 
 
         redeemPointsBtn.setOnClickListener{
-            readData(FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(FirebaseAuth.getInstance().currentUser!!.uid),
-                object : OnGetDataListener {
-                override fun onSuccess(snapshot: DataSnapshot?) {
-                    val x = snapshot?.child("points")?.value.toString()
-                    Toast.makeText(context, "the data is $x", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onStart() {
-                }
-
-                override fun onFailure() {
-                }
-            })
+            changePointsText()
         }
     }
 
 
-    fun readData(ref: DatabaseReference, listener: OnGetDataListener) {
-        listener.onStart()
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                listener.onSuccess(snapshot)
-            }
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
-                listener.onFailure()
-            }
-        })
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
@@ -118,14 +97,47 @@ class LosAmigosPointsActivity : AppCompatActivity() {
         }
     } //7
 
+    fun changePointsText() {
+        // If I'm going to do this workaround and not return a value with this function, I have to make DAMN
+        // sure I'm changing the points value on startup every time. And then every time points are changed I need to
+        // make sure I'm changing the text every single time.
+        //Some questions are what if someone logs into a different phone with their account. If their points don't update right
+        // and I didn't update their points, the user might lose their points when they update.
+        // I might need to make an audit function to make sure the points in the database match what's shown on the textView.
+        val ref = FirebaseDatabase.getInstance().getReference("Edit").child(storeName).child(
+            FirebaseAuth.getInstance().currentUser!!.uid
+        )
 
-    interface OnGetDataListener {
-        //this is the listener interface. I'm not really sure how it works but it does.
-        fun onSuccess(dataSnapshot: DataSnapshot?)
-        fun onStart()
-        fun onFailure()
+        val sharedPreferences = getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val points = snapshot.child("points").value.toString()
+                pointsNumberTextView.text = points
+                editor.apply{
+                    putString("$storeName points", points)
+                }.apply()
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Err 11 Database reach cancelled", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
+    private fun loadSharedPreferencesData(): String?{
+        val sharedPreferences = getSharedPreferences("sharedPrefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("$storeName points", "0")
     }
 
 
 
+
+
+
+
 }
+
+
+
