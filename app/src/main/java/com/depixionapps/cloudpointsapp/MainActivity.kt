@@ -84,7 +84,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         bobsBurgersButton.setOnClickListener{
             if(isNetworkAvailable()){
                 val intent = Intent(this, BobsBurgersPointsActivity::class.java)
@@ -93,7 +92,6 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
             }
         }
-
 
 
         btnLogOut.setOnClickListener{

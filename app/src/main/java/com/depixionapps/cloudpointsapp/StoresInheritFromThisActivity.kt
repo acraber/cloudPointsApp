@@ -10,15 +10,12 @@ import android.widget.Toast
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_los_amigos_points.*
 
-
-
 //I can write the layout id != 0 do the good layout if not then have an error layout
 open class StoresInheritFromThisActivity : AppCompatActivity() {
 
     open val layoutId= 0
     open val scanBtnId = 0
     open val redeemPointsBtnId = 0
-    open val pointsNumberTextViewId = 0
 
     open val qrCode = ""
     open val storeName = ""
@@ -27,20 +24,13 @@ open class StoresInheritFromThisActivity : AppCompatActivity() {
     open lateinit var context: Context
     open lateinit var thisActivity: Activity
 
-
-
     private val methods = Methods()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Wendy 2 change activity_los_amigos_points to the new layout
         setContentView(layoutId)
 
-
-        val scanBtn: Button = findViewById(scanBtnId)
-        val redeemPointsBtn = findViewById<Button>(redeemPointsBtnId)
-        val pointsNumberTextView = findViewById<Button>(pointsNumberTextViewId)
 
         methods.setVariables(
             //This has to be done before any of the other methods are called from the MethodsHandler
@@ -92,7 +82,7 @@ open class StoresInheritFromThisActivity : AppCompatActivity() {
         if (result != null) {
             if (result.contents != null) {
                 if(result.contents == qrCode) {
-                    methods.changeFireBasePoints(pointsNumberTextView,  getSharedPreferences("sharedPrefs",
+                    methods.changeFireBasePoints(bbPointsNumberTextView,  getSharedPreferences("sharedPrefs",
                         Context.MODE_PRIVATE), progressBar, redeemPointsBtn)
                 }else {
                     Toast.makeText(this, "Barcode Not Recognized", Toast.LENGTH_LONG).show()
