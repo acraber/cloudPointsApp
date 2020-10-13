@@ -13,11 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
-        <activity android:name=".BobsBurgersPointsActivity"></activity>
-        <activity android:name=".StoresInheretFromThisActivity" />
-        <activity android:name=".StoresInheritFromActivity" />
-        <activity android:name=".ShakeShackActivity" />
-        <activity android:name=".LosAmigosPointsActivity" />
+        <activity android:name=".SamsClubActivity"></activity>
+        <activity android:name=".BobsBurgersPointsActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

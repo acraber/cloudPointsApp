@@ -69,21 +69,8 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        /*
-        Wendy 6 copy and paste the below code.
-        then change losAmigosButton and LosAmigosPointsActivity
-
-        Once this is done it's a good time to test it and make sure it loads.
-        */
-        losAmigosButton.setOnClickListener{
-            if(isNetworkAvailable()){
-            val intent = Intent(this, LosAmigosPointsActivity::class.java)
-            startActivity(intent)
-            }else{
-                Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
-            }
-        }
-
+        // Wendy 5. copy the block of code below and paste it directly underneath.
+        // Wendy 6. change bobsBurgersButton and BobsBurgersPointsActivity
         bobsBurgersButton.setOnClickListener{
             if(isNetworkAvailable()){
                 val intent = Intent(this, BobsBurgersPointsActivity::class.java)
@@ -92,6 +79,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Internet connection required", Toast.LENGTH_LONG).show()
             }
         }
+
 
 
         btnLogOut.setOnClickListener{

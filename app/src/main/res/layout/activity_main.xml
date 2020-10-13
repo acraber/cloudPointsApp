@@ -170,21 +170,9 @@
             android:background="@drawable/rounded_button"
             android:textSize="30sp"/>
 
-        <TextView
-            android:id="@+id/losAmigosButton"
-            android:padding="15dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:text="Los Amigos"
-            android:textSize="35dp"
-            android:textColor="@android:color/secondary_text_dark"/>
-
-
-
-        <!--//Wendy 5 copy this textView and paste it right below it.
-        Then change "bobsBurgersButton" and "Bob's Burgers" (the id and text)
+        <!--Wendy 4. copy the TextView below and paste it right under, leaving everything
+        else.
+        Then change android:id and android:text
         -->
         <TextView
             android:id="@+id/bobsBurgersButton"

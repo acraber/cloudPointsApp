@@ -8,12 +8,11 @@ import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.NetworkInfo
 import android.os.Build
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat.getSystemService
+import com.depixionapps.cloudpointsapp.nonactivities.AuditFirebaseHero
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.zxing.integration.android.IntentIntegrator
